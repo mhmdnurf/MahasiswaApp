@@ -57,5 +57,4 @@ fun MahasiswaAppTheme(
     )
 }
 
-// Small helper to pick a lighter blue for dark primary if needed
 private fun Blue200toPrimary() = Blue400

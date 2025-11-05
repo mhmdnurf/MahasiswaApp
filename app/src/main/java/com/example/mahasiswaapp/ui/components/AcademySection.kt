@@ -95,7 +95,6 @@ private fun AkademikCardItem(
         )
     ) {
         Box {
-            // Gradient accent bar on the left
             Box(
                 modifier = Modifier
                     .width(4.dp)
@@ -128,7 +127,6 @@ private fun AkademikCardItem(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.weight(1f)
                     ) {
-                        // Modern icon container with gradient
                         Box(
                             modifier = Modifier
                                 .size(52.dp)
@@ -175,7 +173,6 @@ private fun AkademikCardItem(
                         }
                     }
 
-                    // Arrow icon
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                         contentDescription = "Navigate",
@@ -186,13 +183,11 @@ private fun AkademikCardItem(
 
                 Spacer(Modifier.height(16.dp))
 
-                // Bottom section with badge and timestamp
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Timestamp with icon
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -210,7 +205,6 @@ private fun AkademikCardItem(
                         )
                     }
 
-                    // Modern badge
                     if (item.badge != null) {
                         Surface(
                             color = item.accentColor.copy(alpha = 0.12f),
@@ -242,7 +236,6 @@ fun AkademikSection(
     Column(
         modifier = Modifier.fillMaxWidth()
     ) {
-        // Header section
         Row(
             modifier = Modifier
                 .fillMaxWidth()

@@ -142,7 +142,6 @@ fun MahasiswaCard(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Avatar singkatan nama (misal Alya Putri -> AP)
             val initials = mahasiswa.nama_lengkap?.split(" ")?.take(2)?.joinToString("") { it.firstOrNull()?.toString() ?: "" }?.uppercase() ?: "?"
             Box(
                 modifier = Modifier
