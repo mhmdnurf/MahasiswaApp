@@ -1,7 +1,16 @@
 package com.example.mahasiswaapp.ui.components
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Notifications
@@ -10,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -22,8 +32,9 @@ import com.example.mahasiswaapp.ui.theme.MahasiswaAppTheme
 
 @Composable
 fun GreetingHeader(
-    name: String = "Zakaria",
-    onBellClick: () -> Unit = {}
+    name: String = "Nurfatkhur",
+    onBellClick: () -> Unit = {},
+    onProfileClick: () -> Unit = {}
 ) {
     Column {
             Row(
@@ -32,13 +43,15 @@ fun GreetingHeader(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.profile_pic),
+                    painter = painterResource(id = R.drawable.my_profile),
                     contentDescription = "Profile Picture",
                     modifier = Modifier
                         .size(48.dp)
-                        .clip(CircleShape),
+                        .clip(CircleShape)
+                        .clickable(onClick = onProfileClick),
                     contentScale = ContentScale.Crop
                 )
+                Spacer(modifier = Modifier.width(12.dp))
                 Column(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.Center

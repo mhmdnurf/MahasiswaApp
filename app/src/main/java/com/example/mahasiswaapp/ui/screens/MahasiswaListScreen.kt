@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -31,13 +32,34 @@ fun MahasiswaListScreen(
     mahasiswas: List<Mahasiswa>? = null,
     onMahasiswaClick: (Mahasiswa) -> Unit = {},
     viewModel: MahasiswaViewModel = viewModel(),
-    onNavigateBack: () -> Unit = {}
+    onNavigateBack: () -> Unit = {},
+    onAddMahasiswaClick: () -> Unit = {},
+    shouldRefresh: Boolean = false,
+    onRefreshConsumed: () -> Unit = {},
+    snackbarMessage: String? = null,
+    onSnackbarShown: () -> Unit = {}
 ) {
 
     val vmState by viewModel.uiState.collectAsState()
     val uiState: Result<List<Mahasiswa>> = mahasiswas?.let { Result.Success(it) } ?: vmState
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(shouldRefresh) {
+        if (shouldRefresh) {
+            viewModel.refresh()
+            onRefreshConsumed()
+        }
+    }
+
+    LaunchedEffect(snackbarMessage) {
+        if (!snackbarMessage.isNullOrBlank()) {
+            snackbarHostState.showSnackbar(snackbarMessage)
+            onSnackbarShown()
+        }
+    }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text("Data Mahasiswa") },
@@ -58,6 +80,14 @@ fun MahasiswaListScreen(
                     }
                 }
             )
+        },
+        floatingActionButton = {
+            FloatingActionButton(onClick = onAddMahasiswaClick) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Tambah Mahasiswa"
+                )
+            }
         }
     ) { innerPadding ->
         when (val state = uiState) {
