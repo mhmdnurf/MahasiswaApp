@@ -16,18 +16,22 @@ data class DosenFormUiState(
     val nama: String = "",
     val nidn: String = "",
     val email: String = "",
-    val nomorHp: String = "",
+    val prodi: String = "",
+    val konsentrasi: String = "",
     val namaError: String? = null,
     val nidnError: String? = null,
     val emailError: String? = null,
-    val nomorHpError: String? = null,
+    val prodiError: String? = null,
+    val konsentrasiError: String? = null,
     val isSubmitting: Boolean = false,
     val globalError: String? = null,
     val isSuccess: Boolean = false
 ) {
     val isFormValid: Boolean
-        get() = namaError == null && nidnError == null && emailError == null && nomorHpError == null &&
-            nama.isNotBlank() && nidn.isNotBlank() && email.isNotBlank() && nomorHp.isNotBlank()
+        get() = namaError == null && nidnError == null && emailError == null &&
+            prodiError == null && konsentrasiError == null &&
+            nama.isNotBlank() && nidn.isNotBlank() && email.isNotBlank() &&
+            prodi.isNotBlank() && konsentrasi.isNotBlank()
 }
 
 class DosenFormViewModel(
@@ -49,8 +53,12 @@ class DosenFormViewModel(
         copy(email = value, emailError = validateEmail(value), globalError = null)
     }
 
-    fun updateNomorHp(value: String) = updateState {
-        copy(nomorHp = value, nomorHpError = validateNomorHp(value), globalError = null)
+    fun updateProdi(value: String) = updateState {
+        copy(prodi = value, prodiError = validateProdi(value), globalError = null)
+    }
+
+    fun updateKonsentrasi(value: String) = updateState {
+        copy(konsentrasi = value, konsentrasiError = validateKonsentrasi(value), globalError = null)
     }
 
     fun submit() {
@@ -58,15 +66,17 @@ class DosenFormViewModel(
         val namaError = validateNama(current.nama)
         val nidnError = validateNidn(current.nidn)
         val emailError = validateEmail(current.email)
-        val nomorHpError = validateNomorHp(current.nomorHp)
+        val prodiError = validateProdi(current.prodi)
+        val konsentrasiError = validateKonsentrasi(current.konsentrasi)
 
-        if (listOf(namaError, nidnError, emailError, nomorHpError).any { it != null }) {
+        if (listOf(namaError, nidnError, emailError, prodiError, konsentrasiError).any { it != null }) {
             _uiState.update {
                 it.copy(
                     namaError = namaError,
                     nidnError = nidnError,
                     emailError = emailError,
-                    nomorHpError = nomorHpError
+                    prodiError = prodiError,
+                    konsentrasiError = konsentrasiError
                 )
             }
             return
@@ -76,7 +86,8 @@ class DosenFormViewModel(
             nama = current.nama.trim(),
             nidn = current.nidn.trim(),
             email = current.email.trim(),
-            nomorHp = current.nomorHp.trim()
+            prodi = current.prodi.trim(),
+            konsentrasi = current.konsentrasi.trim()
         )
 
         viewModelScope.launch {
@@ -134,12 +145,10 @@ class DosenFormViewModel(
                 else -> null
             }
 
-        fun validateNomorHp(value: String): String? =
-            when {
-                value.isBlank() -> "Nomor HP wajib diisi"
-                value.any { !it.isDigit() } -> "Nomor HP hanya boleh angka"
-                value.length < 10 -> "Nomor HP minimal 10 digit"
-                else -> null
-            }
+        fun validateProdi(value: String): String? =
+            if (value.isBlank()) "Program studi wajib diisi" else null
+
+        fun validateKonsentrasi(value: String): String? =
+            if (value.isBlank()) "Konsentrasi wajib diisi" else null
     }
 }

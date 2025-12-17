@@ -1,5 +1,6 @@
 package com.example.mahasiswaapp.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,19 +11,19 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -44,6 +45,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -142,7 +145,7 @@ fun DosenListScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        androidx.compose.material3.CircularProgressIndicator()
+                        CircularProgressIndicator()
                         Spacer(modifier = Modifier.height(8.dp))
                         Text("Memuat data dosen...")
                     }
@@ -154,24 +157,14 @@ fun DosenListScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(innerPadding),
-                    verticalArrangement = Arrangement.Center,
+                    verticalArrangement = Arrangement.Top,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(
-                        text = "Gagal memuat data",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.error
+                    Spacer(Modifier.height(28.dp))
+                    ErrorState(
+                        error = uiState.exception.message ?: "Terjadi kesalahan",
+                        onRetry = { viewModel.refresh() }
                     )
-                    Spacer(Modifier.height(8.dp))
-                    Text(
-                        text = uiState.exception.message ?: "Terjadi kesalahan",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(Modifier.height(16.dp))
-                    Button(onClick = { viewModel.refresh() }) {
-                        Text("Coba Lagi")
-                    }
                 }
             }
 
@@ -182,19 +175,11 @@ fun DosenListScreen(
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(innerPadding),
-                        verticalArrangement = Arrangement.Center,
+                        verticalArrangement = Arrangement.Top,
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text(
-                            text = "Belum ada data dosen",
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                        Spacer(Modifier.height(4.dp))
-                        Text(
-                            text = "Tambahkan data untuk mulai mengelola dosen.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        Spacer(Modifier.height(28.dp))
+                        EmptyState(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp))
                     }
                 } else {
                     LazyColumn(
@@ -207,9 +192,7 @@ fun DosenListScreen(
                         items(data, key = { it.nidn ?: it.hashCode() }) { dosen ->
                             DosenCard(
                                 dosen = dosen,
-                                onEditClick = {
-                                    dosen.nidn?.let(onEditDosen)
-                                },
+                                onClick = { dosen.nidn?.let(onEditDosen) },
                                 onDeleteClick = { dosenToDelete = dosen }
                             )
                         }
@@ -234,67 +217,117 @@ fun DosenListScreen(
 @Composable
 private fun DosenCard(
     dosen: Dosen,
-    onEditClick: () -> Unit,
+    onClick: () -> Unit = {},
     onDeleteClick: () -> Unit
 ) {
     ElevatedCard(
+        onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
-        Column(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+            verticalAlignment = Alignment.Top
         ) {
-            Text(
-                text = dosen.nama ?: "Nama tidak tersedia",
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            Text(
-                text = "NIDN ${dosen.nidn ?: "-"}",
-                style = MaterialTheme.typography.bodyMedium
-            )
-            Text(
-                text = dosen.email ?: "Email tidak tersedia",
-                style = MaterialTheme.typography.bodyMedium,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            Text(
-                text = dosen.nomorHp ?: "Nomor HP tidak tersedia",
-                style = MaterialTheme.typography.bodyMedium
-            )
-
-            Spacer(Modifier.height(12.dp))
-
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            val initials = dosen.nama?.split(" ")?.take(2)?.joinToString("") { it.firstOrNull()?.toString() ?: "" }?.uppercase() ?: "?"
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(MaterialTheme.shapes.medium)
+                    .background(MaterialTheme.colorScheme.primary),
+                contentAlignment = Alignment.Center
             ) {
-                TextButton(onClick = onEditClick) {
-                    Icon(
-                        imageVector = Icons.Filled.Edit,
-                        contentDescription = null
-                    )
-                    Spacer(Modifier.width(4.dp))
-                    Text("Edit")
-                }
-                TextButton(
-                    onClick = onDeleteClick,
-                    colors = ButtonDefaults.textButtonColors(
-                        contentColor = MaterialTheme.colorScheme.error
-                    )
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Delete,
-                        contentDescription = null
-                    )
-                    Spacer(Modifier.width(4.dp))
-                    Text("Hapus")
-                }
+                Text(
+                    text = initials.ifBlank { "?" },
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp
+                )
             }
+
+            Spacer(Modifier.width(16.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = dosen.nama ?: "Nama tidak tersedia",
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    text = "NIDN ${dosen.nidn ?: "-"}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    text = dosen.prodi ?: "Prodi tidak tersedia",
+                    style = MaterialTheme.typography.bodyMedium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+
+            Spacer(Modifier.width(8.dp))
+
+            Column(horizontalAlignment = Alignment.End) {
+                AssistChip(
+                    onClick = onClick,
+                    label = { Text(dosen.konsentrasi ?: "-") }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun EmptyState(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier,
+        contentAlignment = Alignment.Center
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = "Belum ada data dosen",
+                style = MaterialTheme.typography.titleMedium
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = "Tambahkan data untuk mulai mengelola dosen.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
+private fun ErrorState(
+    error: String,
+    onRetry: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "Gagal memuat data",
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.error
+        )
+        Spacer(Modifier.height(4.dp))
+        Text(
+            text = error,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(Modifier.height(16.dp))
+        Button(onClick = onRetry) {
+            Text("Coba Lagi")
         }
     }
 }
@@ -314,7 +347,7 @@ private fun DeleteDosenDialog(
                 Text("Apakah Anda yakin ingin menghapus ${dosen.nama ?: "dosen ini"}?")
                 if (isLoading) {
                     Spacer(Modifier.height(12.dp))
-                    androidx.compose.material3.CircularProgressIndicator()
+                    CircularProgressIndicator()
                 }
             }
         },
@@ -346,9 +379,11 @@ private fun DosenCardPreview() {
                 nama = "Dr. Andi Pratama",
                 nidn = "12345678",
                 email = "andi@kampus.ac.id",
-                nomorHp = "081234567890"
+                nomorHp = "081234567890",
+                prodi = "Teknik Informatika",
+                konsentrasi = "Data Science"
             ),
-            onEditClick = {},
+            onClick = {},
             onDeleteClick = {}
         )
     }

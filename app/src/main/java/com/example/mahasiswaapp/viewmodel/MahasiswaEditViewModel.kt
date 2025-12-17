@@ -54,11 +54,45 @@ class MahasiswaEditViewModel(
         if (!nim.isNullOrBlank()) loadMahasiswa()
     }
 
-    fun updateNama(value: String) = updateFormState { copy(nama = value, errorMessage = null) }
-    fun updateNim(value: String) = updateFormState { copy(nim = value, errorMessage = null) }
-    fun updateJurusan(value: String) = updateFormState { copy(jurusan = value, errorMessage = null) }
-    fun updateTahunAngkatan(value: String) = updateFormState { copy(tahunAngkatan = value, errorMessage = null) }
-    fun updateIpk(value: String) = updateFormState { copy(ipk = value, errorMessage = null) }
+    fun updateNama(value: String) = updateFormState {
+        copy(
+            nama = value,
+            generalError = null,
+            fieldErrors = fieldErrors.copy(nama = validateMahasiswaNama(value))
+        )
+    }
+
+    fun updateNim(value: String) = updateFormState {
+        copy(
+            nim = value,
+            generalError = null,
+            fieldErrors = fieldErrors.copy(nim = validateMahasiswaNim(value))
+        )
+    }
+
+    fun updateJurusan(value: String) = updateFormState {
+        copy(
+            jurusan = value,
+            generalError = null,
+            fieldErrors = fieldErrors.copy(jurusan = validateMahasiswaJurusan(value))
+        )
+    }
+
+    fun updateTahunAngkatan(value: String) = updateFormState {
+        copy(
+            tahunAngkatan = value,
+            generalError = null,
+            fieldErrors = fieldErrors.copy(tahunAngkatan = validateMahasiswaTahunAngkatan(value))
+        )
+    }
+
+    fun updateIpk(value: String) = updateFormState {
+        copy(
+            ipk = value,
+            generalError = null,
+            fieldErrors = fieldErrors.copy(ipk = validateMahasiswaIpk(value))
+        )
+    }
 
     private fun loadMahasiswa() {
         val nimLocal = nim ?: return
@@ -81,7 +115,8 @@ class MahasiswaEditViewModel(
                                     jurusan = result.data.jurusan.orEmpty(),
                                     tahunAngkatan = result.data.tahun_angkatan?.toString().orEmpty(),
                                     ipk = result.data.ipk?.toString().orEmpty(),
-                                    errorMessage = null,
+                                    fieldErrors = FieldErrors(),
+                                    generalError = null,
                                     isSubmitting = false,
                                     isSuccess = false
                                 )
@@ -98,25 +133,46 @@ class MahasiswaEditViewModel(
         val form = _uiState.value.formState
         if (!form.isFormValid || form.isSubmitting) return
 
+        val validationResult = validateMahasiswaForm(form)
+        if (validationResult != null) {
+            updateFormState {
+                copy(
+                    fieldErrors = validationResult.fieldErrors,
+                    generalError = validationResult.generalError
+                )
+            }
+            return
+        }
+
         val request = CreateMahasiswaRequest(
             namaLengkap = form.nama,
             nim = form.nim,
-            jurusan = form.jurusan.ifBlank { null },
+            jurusan = form.jurusan,
             tahunAngkatan = form.tahunAngkatan.toIntOrNull(),
             ipk = form.ipk.toDoubleOrNull()
         )
 
         viewModelScope.launch {
-            updateFormState { copy(isSubmitting = true, errorMessage = null, isSuccess = false) }
+            updateFormState {
+                copy(
+                    isSubmitting = true,
+                    generalError = null,
+                    fieldErrors = FieldErrors(),
+                    isSuccess = false
+                )
+            }
             when (val result = repository.updateMahasiswa(nimLocal, request)) {
                 is Result.Success -> {
                     updateFormState { copy(isSubmitting = false, isSuccess = true) }
                 }
                 is Result.Error -> {
+                    val message = result.exception.message ?: "Gagal memperbarui data"
+                    val fieldErrors = mapErrorToFieldErrors(message)
                     updateFormState {
                         copy(
                             isSubmitting = false,
-                            errorMessage = result.exception.message ?: "Gagal memperbarui data"
+                            generalError = if (fieldErrors.hasErrors) null else message,
+                            fieldErrors = fieldErrors
                         )
                     }
                 }

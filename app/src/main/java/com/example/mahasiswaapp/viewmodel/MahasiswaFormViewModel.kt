@@ -18,11 +18,17 @@ data class MahasiswaFormUiState(
     val tahunAngkatan: String = "",
     val ipk: String = "",
     val isSubmitting: Boolean = false,
-    val errorMessage: String? = null,
+    val fieldErrors: FieldErrors = FieldErrors(),
+    val generalError: String? = null,
     val isSuccess: Boolean = false
 ) {
     val isFormValid: Boolean
-        get() = nama.isNotBlank() && nim.isNotBlank()
+        get() = !fieldErrors.hasErrors &&
+            nama.isNotBlank() &&
+            nim.isNotBlank() &&
+            jurusan.isNotBlank() &&
+            tahunAngkatan.isNotBlank() &&
+            ipk.isNotBlank()
 }
 
 class MahasiswaFormViewModel(
@@ -32,26 +38,78 @@ class MahasiswaFormViewModel(
     private val _uiState = MutableStateFlow(MahasiswaFormUiState())
     val uiState: StateFlow<MahasiswaFormUiState> = _uiState.asStateFlow()
 
-    fun updateNama(value: String) = updateState { copy(nama = value, errorMessage = null) }
-    fun updateNim(value: String) = updateState { copy(nim = value, errorMessage = null) }
-    fun updateJurusan(value: String) = updateState { copy(jurusan = value, errorMessage = null) }
-    fun updateTahunAngkatan(value: String) = updateState { copy(tahunAngkatan = value, errorMessage = null) }
-    fun updateIpk(value: String) = updateState { copy(ipk = value, errorMessage = null) }
+    fun updateNama(value: String) = updateState {
+        copy(
+            nama = value,
+            generalError = null,
+            fieldErrors = fieldErrors.copy(nama = validateMahasiswaNama(value))
+        )
+    }
+
+    fun updateNim(value: String) = updateState {
+        copy(
+            nim = value,
+            generalError = null,
+            fieldErrors = fieldErrors.copy(nim = validateMahasiswaNim(value))
+        )
+    }
+
+    fun updateJurusan(value: String) = updateState {
+        copy(
+            jurusan = value,
+            generalError = null,
+            fieldErrors = fieldErrors.copy(jurusan = validateMahasiswaJurusan(value))
+        )
+    }
+
+    fun updateTahunAngkatan(value: String) = updateState {
+        copy(
+            tahunAngkatan = value,
+            generalError = null,
+            fieldErrors = fieldErrors.copy(tahunAngkatan = validateMahasiswaTahunAngkatan(value))
+        )
+    }
+
+    fun updateIpk(value: String) = updateState {
+        copy(
+            ipk = value,
+            generalError = null,
+            fieldErrors = fieldErrors.copy(ipk = validateMahasiswaIpk(value))
+        )
+    }
 
     fun submit() {
         val state = _uiState.value
         if (!state.isFormValid || state.isSubmitting) return
 
+        val validationResult = validateMahasiswaForm(state)
+        if (validationResult != null) {
+            _uiState.update {
+                it.copy(
+                    fieldErrors = validationResult.fieldErrors,
+                    generalError = validationResult.generalError
+                )
+            }
+            return
+        }
+
         val request = CreateMahasiswaRequest(
             namaLengkap = state.nama,
             nim = state.nim,
-            jurusan = state.jurusan.ifBlank { null },
+            jurusan = state.jurusan,
             tahunAngkatan = state.tahunAngkatan.toIntOrNull(),
             ipk = state.ipk.toDoubleOrNull()
         )
 
         viewModelScope.launch {
-            _uiState.update { it.copy(isSubmitting = true, errorMessage = null, isSuccess = false) }
+            _uiState.update {
+                it.copy(
+                    isSubmitting = true,
+                    generalError = null,
+                    fieldErrors = FieldErrors(),
+                    isSuccess = false
+                )
+            }
             when (val result = repository.createMahasiswa(request)) {
                 is Result.Success -> {
                     _uiState.update {
@@ -61,14 +119,19 @@ class MahasiswaFormViewModel(
                         )
                     }
                 }
+
                 is Result.Error -> {
+                    val message = result.exception.message ?: "Gagal menyimpan data"
+                    val fieldErrors = mapErrorToFieldErrors(message)
                     _uiState.update {
                         it.copy(
                             isSubmitting = false,
-                            errorMessage = result.exception.message ?: "Gagal menyimpan data"
+                            generalError = if (fieldErrors.hasErrors) null else message,
+                            fieldErrors = fieldErrors
                         )
                     }
                 }
+
                 Result.Loading -> Unit
             }
         }

@@ -278,7 +278,7 @@ fun AkademikSection(
                 )
             ) {
                 Text(
-                    if (state.isLoading) "Memuat..." else "Muat ulang",
+                    if (state.isLoading) "Loading..." else "Refresh",
                     fontWeight = FontWeight.Medium
                 )
             }

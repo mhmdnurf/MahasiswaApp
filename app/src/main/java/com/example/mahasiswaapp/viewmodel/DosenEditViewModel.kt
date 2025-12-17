@@ -68,11 +68,13 @@ class DosenEditViewModel(
                                 nama = result.data.nama.orEmpty(),
                                 nidn = result.data.nidn.orEmpty(),
                                 email = result.data.email.orEmpty(),
-                                nomorHp = result.data.nomorHp.orEmpty(),
+                                prodi = result.data.prodi.orEmpty(),
+                                konsentrasi = result.data.konsentrasi.orEmpty(),
                                 namaError = null,
                                 nidnError = null,
                                 emailError = null,
-                                nomorHpError = null,
+                                prodiError = null,
+                                konsentrasiError = null,
                                 isSubmitting = false,
                                 isSuccess = false,
                                 globalError = null
@@ -93,8 +95,11 @@ class DosenEditViewModel(
     fun updateEmail(value: String) = updateForm {
         copy(email = value, emailError = DosenFormViewModel.validateEmail(value), globalError = null)
     }
-    fun updateNomorHp(value: String) = updateForm {
-        copy(nomorHp = value, nomorHpError = DosenFormViewModel.validateNomorHp(value), globalError = null)
+    fun updateProdi(value: String) = updateForm {
+        copy(prodi = value, prodiError = DosenFormViewModel.validateProdi(value), globalError = null)
+    }
+    fun updateKonsentrasi(value: String) = updateForm {
+        copy(konsentrasi = value, konsentrasiError = DosenFormViewModel.validateKonsentrasi(value), globalError = null)
     }
 
     fun submit() {
@@ -103,15 +108,17 @@ class DosenEditViewModel(
         val namaError = DosenFormViewModel.validateNama(form.nama)
         val nidnError = DosenFormViewModel.validateNidn(form.nidn)
         val emailError = DosenFormViewModel.validateEmail(form.email)
-        val nomorHpError = DosenFormViewModel.validateNomorHp(form.nomorHp)
+        val prodiError = DosenFormViewModel.validateProdi(form.prodi)
+        val konsentrasiError = DosenFormViewModel.validateKonsentrasi(form.konsentrasi)
 
-        if (listOf(namaError, nidnError, emailError, nomorHpError).any { it != null }) {
+        if (listOf(namaError, nidnError, emailError, prodiError, konsentrasiError).any { it != null }) {
             updateForm {
                 copy(
                     namaError = namaError,
                     nidnError = nidnError,
                     emailError = emailError,
-                    nomorHpError = nomorHpError
+                    prodiError = prodiError,
+                    konsentrasiError = konsentrasiError
                 )
             }
             return
@@ -121,7 +128,8 @@ class DosenEditViewModel(
             nama = form.nama.trim(),
             nidn = form.nidn.trim(),
             email = form.email.trim(),
-            nomorHp = form.nomorHp.trim()
+            prodi = form.prodi.trim(),
+            konsentrasi = form.konsentrasi.trim()
         )
 
         viewModelScope.launch {

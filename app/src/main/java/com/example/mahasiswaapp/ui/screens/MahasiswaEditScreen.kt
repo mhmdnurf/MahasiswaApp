@@ -10,13 +10,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -30,18 +28,11 @@ fun MahasiswaEditScreen(
     onSuccess: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(uiState.formState.isSuccess) {
         if (uiState.formState.isSuccess) {
             onSuccess()
             viewModel.onSuccessHandled()
-        }
-    }
-
-    LaunchedEffect(uiState.formState.errorMessage) {
-        uiState.formState.errorMessage?.let {
-            snackbarHostState.showSnackbar(it)
         }
     }
 
@@ -94,8 +85,7 @@ fun MahasiswaEditScreen(
                 onJurusanChange = viewModel::updateJurusan,
                 onTahunAngkatanChange = viewModel::updateTahunAngkatan,
                 onIpkChange = viewModel::updateIpk,
-                onSubmit = viewModel::submit,
-                snackbarHostState = snackbarHostState
+                onSubmit = viewModel::submit
             )
         }
     }

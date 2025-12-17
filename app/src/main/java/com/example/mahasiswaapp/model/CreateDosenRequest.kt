@@ -12,6 +12,9 @@ data class CreateDosenRequest(
     @SerializedName("email")
     val email: String,
 
-    @SerializedName("nomor_hp")
-    val nomorHp: String
+    @SerializedName("prodi")
+    val prodi: String,
+
+    @SerializedName("konsentrasi")
+    val konsentrasi: String
 )

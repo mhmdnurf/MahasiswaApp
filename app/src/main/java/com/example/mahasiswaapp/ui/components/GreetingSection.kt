@@ -43,7 +43,7 @@ fun GreetingHeader(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.my_profile),
+                    painter = painterResource(id = R.drawable.ghibli),
                     contentDescription = "Profile Picture",
                     modifier = Modifier
                         .size(48.dp)

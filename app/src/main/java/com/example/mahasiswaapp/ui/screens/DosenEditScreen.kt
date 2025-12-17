@@ -90,7 +90,8 @@ fun DosenEditScreen(
                 onNamaChange = viewModel::updateNama,
                 onNidnChange = viewModel::updateNidn,
                 onEmailChange = viewModel::updateEmail,
-                onNomorHpChange = viewModel::updateNomorHp,
+                onProdiChange = viewModel::updateProdi,
+                onKonsentrasiChange = viewModel::updateKonsentrasi,
                 onSubmit = viewModel::submit,
                 snackbarHostState = snackbarHostState,
                 title = "Edit Dosen"

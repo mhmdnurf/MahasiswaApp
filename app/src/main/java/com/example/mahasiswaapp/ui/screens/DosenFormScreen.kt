@@ -62,7 +62,8 @@ fun DosenFormScreen(
         onNamaChange = viewModel::updateNama,
         onNidnChange = viewModel::updateNidn,
         onEmailChange = viewModel::updateEmail,
-        onNomorHpChange = viewModel::updateNomorHp,
+        onProdiChange = viewModel::updateProdi,
+        onKonsentrasiChange = viewModel::updateKonsentrasi,
         onSubmit = viewModel::submit,
         snackbarHostState = snackbarHostState,
         title = "Tambah Dosen"
@@ -77,7 +78,8 @@ fun DosenFormScreenContent(
     onNamaChange: (String) -> Unit,
     onNidnChange: (String) -> Unit,
     onEmailChange: (String) -> Unit,
-    onNomorHpChange: (String) -> Unit,
+    onProdiChange: (String) -> Unit,
+    onKonsentrasiChange: (String) -> Unit,
     onSubmit: () -> Unit,
     snackbarHostState: SnackbarHostState,
     title: String
@@ -156,14 +158,29 @@ fun DosenFormScreenContent(
             )
 
             OutlinedTextField(
-                value = state.nomorHp,
-                onValueChange = onNomorHpChange,
+                value = state.prodi,
+                onValueChange = onProdiChange,
                 modifier = Modifier.fillMaxWidth(),
-                label = { Text("Nomor HP") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                isError = state.nomorHpError != null,
+                label = { Text("Program Studi") },
+                isError = state.prodiError != null,
                 supportingText = {
-                    state.nomorHpError?.let { error ->
+                    state.prodiError?.let { error ->
+                        Text(
+                            text = error,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
+            )
+
+            OutlinedTextField(
+                value = state.konsentrasi,
+                onValueChange = onKonsentrasiChange,
+                modifier = Modifier.fillMaxWidth(),
+                label = { Text("Konsentrasi") },
+                isError = state.konsentrasiError != null,
+                supportingText = {
+                    state.konsentrasiError?.let { error ->
                         Text(
                             text = error,
                             color = MaterialTheme.colorScheme.error
@@ -201,13 +218,15 @@ private fun DosenFormScreenPreview() {
                 nama = "Dr. Andi",
                 nidn = "12345678",
                 email = "andi@kampus.ac.id",
-                nomorHp = "08123456789"
+                prodi = "Teknik Informatika",
+                konsentrasi = "Artificial Intelligence"
             ),
             onNavigateBack = {},
             onNamaChange = {},
             onNidnChange = {},
             onEmailChange = {},
-            onNomorHpChange = {},
+            onProdiChange = {},
+            onKonsentrasiChange = {},
             onSubmit = {},
             snackbarHostState = SnackbarHostState(),
             title = "Tambah Dosen"

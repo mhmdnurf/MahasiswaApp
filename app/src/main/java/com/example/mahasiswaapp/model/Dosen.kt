@@ -13,5 +13,11 @@ data class Dosen(
     val email: String? = null,
 
     @SerializedName("nomor_hp")
-    val nomorHp: String? = null
+    val nomorHp: String? = null,
+
+    @SerializedName("prodi")
+    val prodi: String? = null,
+
+    @SerializedName("konsentrasi")
+    val konsentrasi: String? = null
 )

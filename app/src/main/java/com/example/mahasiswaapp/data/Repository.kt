@@ -5,6 +5,8 @@ import com.example.mahasiswaapp.model.CreateMahasiswaRequest
 import com.example.mahasiswaapp.model.Dosen
 import com.example.mahasiswaapp.model.Mahasiswa
 import com.example.mahasiswaapp.network.NetworkModule
+import com.google.gson.Gson
+import com.google.gson.JsonObject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -13,6 +15,7 @@ import kotlinx.coroutines.withContext
 
 class Repository {
     private val apiService = NetworkModule.apiService
+    private val gson = Gson()
 
     fun getMahasiswa(): Flow<Result<List<Mahasiswa>>> = flow {
         emit(Result.Loading)
@@ -29,7 +32,7 @@ class Repository {
                     }
                 } ?: emit(Result.Error(Exception("Response body kosong")))
             } else {
-                emit(Result.Error(Exception("Gagal mengambil data mahasiswa: ${response.message()}")))
+                emit(Result.Error(Exception(buildErrorMessage(response, "Gagal mengambil data mahasiswa"))))
             }
         } catch (e: Exception) {
             emit(Result.Error(e))
@@ -50,7 +53,7 @@ class Repository {
                     }
                 } ?: emit(Result.Error(Exception("Response body kosong")))
             } else {
-                emit(Result.Error(Exception("Gagal mengambil detail mahasiswa: ${response.message()}")))
+                emit(Result.Error(Exception(buildErrorMessage(response, "Gagal mengambil detail mahasiswa"))))
             }
         } catch (e: Exception) {
             emit(Result.Error(e))
@@ -66,7 +69,7 @@ class Repository {
                         Result.Success(data)
                     } ?: Result.Error(Exception("Response body kosong"))
                 } else {
-                    Result.Error(Exception("Gagal menambahkan mahasiswa: ${response.message()}"))
+                    Result.Error(Exception(buildErrorMessage(response, "Gagal menambahkan mahasiswa")))
                 }
             } catch (e: Exception) {
                 Result.Error(e)
@@ -82,7 +85,7 @@ class Repository {
                         Result.Success(data)
                     } ?: Result.Error(Exception("Response body kosong"))
                 } else {
-                    Result.Error(Exception("Gagal memperbarui mahasiswa: ${response.message()}"))
+                    Result.Error(Exception(buildErrorMessage(response, "Gagal memperbarui mahasiswa")))
                 }
             } catch (e: Exception) {
                 Result.Error(e)
@@ -96,7 +99,7 @@ class Repository {
                 if (response.isSuccessful) {
                     Result.Success(Unit)
                 } else {
-                    Result.Error(Exception("Gagal menghapus mahasiswa: ${response.message()}"))
+                    Result.Error(Exception(buildErrorMessage(response, "Gagal menghapus mahasiswa")))
                 }
             } catch (e: Exception) {
                 Result.Error(e)
@@ -112,7 +115,7 @@ class Repository {
                     emit(Result.Success(data))
                 } ?: emit(Result.Error(Exception("Response body kosong")))
             } else {
-                emit(Result.Error(Exception("Gagal mengambil data dosen: ${response.message()}")))
+                emit(Result.Error(Exception(buildErrorMessage(response, "Gagal mengambil data dosen"))))
             }
         } catch (e: Exception) {
             emit(Result.Error(e))
@@ -128,7 +131,7 @@ class Repository {
                     emit(Result.Success(data))
                 } ?: emit(Result.Error(Exception("Response body kosong")))
             } else {
-                emit(Result.Error(Exception("Gagal mengambil data dosen: ${response.message()}")))
+                emit(Result.Error(Exception(buildErrorMessage(response, "Gagal mengambil data dosen"))))
             }
         } catch (e: Exception) {
             emit(Result.Error(e))
@@ -144,7 +147,7 @@ class Repository {
                         Result.Success(data)
                     } ?: Result.Error(Exception("Response body kosong"))
                 } else {
-                    Result.Error(Exception("Gagal menambahkan dosen: ${response.message()}"))
+                    Result.Error(Exception(buildErrorMessage(response, "Gagal menambahkan dosen")))
                 }
             } catch (e: Exception) {
                 Result.Error(e)
@@ -160,7 +163,7 @@ class Repository {
                         Result.Success(data)
                     } ?: Result.Error(Exception("Response body kosong"))
                 } else {
-                    Result.Error(Exception("Gagal memperbarui dosen: ${response.message()}"))
+                    Result.Error(Exception(buildErrorMessage(response, "Gagal memperbarui dosen")))
                 }
             } catch (e: Exception) {
                 Result.Error(e)
@@ -174,10 +177,26 @@ class Repository {
                 if (response.isSuccessful) {
                     Result.Success(Unit)
                 } else {
-                    Result.Error(Exception("Gagal menghapus dosen: ${response.message()}"))
+                    Result.Error(Exception(buildErrorMessage(response, "Gagal menghapus dosen")))
                 }
             } catch (e: Exception) {
                 Result.Error(e)
             }
         }
+
+    private fun buildErrorMessage(response: retrofit2.Response<*>, fallback: String): String {
+        return parseErrorMessage(response) ?: "$fallback: ${response.message()}"
+    }
+
+    private fun parseErrorMessage(response: retrofit2.Response<*>): String? {
+        val errorBody = response.errorBody() ?: return response.message().takeIf { it.isNotBlank() }
+        return try {
+            errorBody.charStream().use { reader ->
+                val json = gson.fromJson(reader, JsonObject::class.java)
+                json?.get("message")?.asString?.takeIf { it.isNotBlank() }
+            }
+        } catch (_: Exception) {
+            response.message().takeIf { it.isNotBlank() }
+        }
+    }
 }

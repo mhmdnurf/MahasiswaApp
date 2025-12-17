@@ -55,6 +55,7 @@ dependencies {
     implementation(libs.retrofit)
     implementation(libs.converter.gson)
     implementation(libs.logging.interceptor)
+    implementation(libs.androidx.datastore.preferences)
 
     // ViewModel
     implementation(libs.androidx.lifecycle.viewmodel.compose)

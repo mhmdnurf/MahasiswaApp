@@ -20,6 +20,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import com.example.mahasiswaapp.ui.screens.DosenDetailScreen
 import com.example.mahasiswaapp.ui.screens.DosenEditScreen
 import com.example.mahasiswaapp.ui.screens.DosenFormScreen
 import com.example.mahasiswaapp.ui.screens.DosenListScreen
@@ -28,22 +29,28 @@ import com.example.mahasiswaapp.ui.screens.MahasiswaDetailScreen
 import com.example.mahasiswaapp.ui.screens.MahasiswaEditScreen
 import com.example.mahasiswaapp.ui.screens.MahasiswaFormScreen
 import com.example.mahasiswaapp.ui.screens.MahasiswaListScreen
+import com.example.mahasiswaapp.ui.screens.LoginScreen
+import com.example.mahasiswaapp.ui.screens.RegisterScreen
 import com.example.mahasiswaapp.ui.screens.ProfileScreen
 import com.example.mahasiswaapp.ui.theme.MahasiswaAppTheme
 
 object Routes {
+    const val Login = "login"
     const val Home = "home"
     const val MahasiswaList = "mahasiswa_list"
     const val MahasiswaDetail = "mahasiswa_detail/{nim}"
     const val MahasiswaForm = "mahasiswa_form"
     const val MahasiswaEdit = "mahasiswa_edit/{nim}"
+    const val Register = "register"
     const val DosenList = "dosen_list"
+    const val DosenDetail = "dosen_detail/{nidn}"
     const val DosenForm = "dosen_form"
     const val DosenEdit = "dosen_edit/{nidn}"
     const val Profile = "profile"
 
     fun mahasiswaDetailRoute(nim: String): String = "mahasiswa_detail/${Uri.encode(nim)}"
     fun mahasiswaEditRoute(nim: String): String = "mahasiswa_edit/${Uri.encode(nim)}"
+    fun dosenDetailRoute(nidn: String): String = "dosen_detail/${Uri.encode(nidn)}"
     fun dosenEditRoute(nidn: String): String = "dosen_edit/${Uri.encode(nidn)}"
 }
 
@@ -61,9 +68,31 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
                 NavHost(
                     navController = navController,
-                    startDestination = Routes.Home,
+                    startDestination = Routes.Login,
                     modifier = Modifier.windowInsetsPadding(WindowInsets.navigationBars)
                 ) {
+                    composable(Routes.Login) {
+                        LoginScreen(
+                            onLoginSuccess = {
+                                navController.navigate(Routes.Home) {
+                                    popUpTo(Routes.Login) { inclusive = true }
+                                }
+                            },
+                            onRegisterClick = {
+                                navController.navigate(Routes.Register)
+                            }
+                        )
+                    }
+                    composable(Routes.Register) {
+                        RegisterScreen(
+                            onRegisterSuccess = {
+                                navController.navigate(Routes.Home) {
+                                    popUpTo(Routes.Login) { inclusive = true }
+                                }
+                            },
+                            onNavigateBack = { navController.popBackStack() }
+                        )
+                    }
                     composable(Routes.Home) {
                         HomeScreen(
                             onMahasiswaListClick = {
@@ -196,7 +225,7 @@ class MainActivity : ComponentActivity() {
                             onNavigateBack = { navController.popBackStack() },
                             onAddDosenClick = { navController.navigate(Routes.DosenForm) },
                             onEditDosen = { nidn ->
-                                navController.navigate(Routes.dosenEditRoute(nidn))
+                                navController.navigate(Routes.dosenDetailRoute(nidn))
                             },
                             shouldRefresh = shouldRefresh,
                             onRefreshConsumed = {
@@ -205,6 +234,44 @@ class MainActivity : ComponentActivity() {
                             snackbarMessage = snackbarMessage.takeIf { it.isNotBlank() },
                             onSnackbarShown = {
                                 savedStateHandle["dosenSnackbar"] = ""
+                            }
+                        )
+                    }
+                    composable(
+                        route = Routes.DosenDetail,
+                        arguments = listOf(navArgument("nidn") { type = NavType.StringType })
+                    ) { backStackEntry ->
+                        val savedStateHandle = backStackEntry.savedStateHandle
+                        val shouldRefreshFlow = remember {
+                            savedStateHandle.getStateFlow("shouldRefreshDosenDetail", false)
+                        }
+                        val snackbarFlow = remember {
+                            savedStateHandle.getStateFlow("dosenDetailSnackbar", "")
+                        }
+                        val shouldRefresh by shouldRefreshFlow.collectAsState()
+                        val snackbarMessage by snackbarFlow.collectAsState()
+
+                        DosenDetailScreen(
+                            onNavigateBack = {
+                                navController.popBackStack()
+                            },
+                            onEditDosen = { nidn ->
+                                navController.navigate(Routes.dosenEditRoute(nidn))
+                            },
+                            onDeleteSuccess = {
+                                navController.previousBackStackEntry?.savedStateHandle?.apply {
+                                    set("shouldRefreshDosen", true)
+                                    set("dosenSnackbar", "Dosen berhasil dihapus")
+                                }
+                                navController.popBackStack()
+                            },
+                            shouldRefresh = shouldRefresh,
+                            onRefreshConsumed = {
+                                savedStateHandle["shouldRefreshDosenDetail"] = false
+                            },
+                            snackbarMessage = snackbarMessage.takeIf { it.isNotBlank() },
+                            onSnackbarShown = {
+                                savedStateHandle["dosenDetailSnackbar"] = ""
                             }
                         )
                     }
@@ -228,6 +295,12 @@ class MainActivity : ComponentActivity() {
                             onNavigateBack = { navController.popBackStack() },
                             onSuccess = {
                                 navController.previousBackStackEntry?.savedStateHandle?.apply {
+                                    set("shouldRefreshDosenDetail", true)
+                                    set("dosenDetailSnackbar", "Data dosen diperbarui")
+                                }
+                                runCatching {
+                                    navController.getBackStackEntry(Routes.DosenList)
+                                }.getOrNull()?.savedStateHandle?.apply {
                                     set("shouldRefreshDosen", true)
                                     set("dosenSnackbar", "Dosen berhasil diperbarui")
                                 }
@@ -237,7 +310,15 @@ class MainActivity : ComponentActivity() {
                     }
                     composable(Routes.Profile) {
                         ProfileScreen(
-                            onNavigateBack = { navController.popBackStack() }
+                            onNavigateBack = { navController.popBackStack() },
+                            onLogout = {
+                                navController.navigate(Routes.Login) {
+                                    popUpTo(navController.graph.startDestinationRoute ?: Routes.Login) {
+                                        inclusive = true
+                                    }
+                                    launchSingleTop = true
+                                }
+                            }
                         )
                     }
                 }
